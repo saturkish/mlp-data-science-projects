@@ -1,0 +1,832 @@
+---
+title: "MATH6166/6173 -- Coursework 1 Answer Sheet"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include = FALSE, purl = FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center')
+```
+
+
+## Question 1
+
+### Part (a)
+
+<!-- Write your code for Q1 (a) in the code chunk below: -->
+
+
+```{r Q1a}
+  #setting the directory
+setwd("C:/Users/Engin-Eer/OneDrive - University of Southampton/Semester 1/MATH6166 - Statistical Computing for Data Scientists (R)/Coursework Assignment/")
+house_data <- read.csv('melbourne_house_price.csv')
+
+more4_rooms <- sum(house_data$Rooms > 4)
+```
+
+<!-- Report your answer for Q1 (a) below: -->
+
+#more4_rooms is 30L (as integer).
+#Number of rooms with more than 4 rooms is recorded as more4_rooms as an integer.
+
+
+### Part (b)
+
+<!-- Write your code for Q1 (b) in the code chunk below: -->
+
+
+```{r Q1b}
+#Variables being converted to factor,
+house_data$Suburb <- factor(house_data$Suburb)
+house_data$Rooms <- factor(house_data$Rooms)
+house_data$Type <- factor(house_data$Type)
+
+#verifying the conversion was successfull,
+class(house_data$Suburb)
+class(house_data$Rooms)
+class(house_data$Type)
+
+#Calculating # of distinct values in Suburb column,
+num_suburbs <- length(unique(house_data$Suburb))
+
+
+```
+
+<!-- Report your answer for Q1 (b) below: -->
+#num_suburbs is 5L (as integer).
+
+### Part (c)
+
+<!-- Write your code for Q1 (c) in the code chunk below: -->
+
+
+```{r Q1c}
+#Step 1: Raw data is filtered and cleared, and stored in `useful_data` variable as;
+useful_data <- house_data[house_data$YearBuilt <= 1980 & !is.na(house_data$BuildingArea) & !is.na(house_data$YearBuilt),]
+
+#Median is calculated
+median_area <- median(useful_data$BuildingArea)
+
+#Temporarily created variable is cleared to keep the environment clear.
+rm(useful_data)
+```
+
+<!-- Report your answer for Q1 (c) below: -->
+
+#median_area = 117
+
+
+### Part (d)
+
+<!-- Write your code for Q1 (d) in the code chunk below: -->
+
+
+```{r Q1d}
+#Step 1: Raw data is filtered, and stored in a temp variable
+onetown <- house_data[house_data$Suburb == 'Brunswick',]
+
+#Step 2: Address of the house with Maximum price has found as,
+brunswick_t_max_address <- onetown[which.max(onetown$Price),"Address"]
+
+#Temporarily created variable is cleared to keep the environment clear.
+rm (onetown)
+```
+
+<!-- Report your answer for Q1 (d) below: -->
+#brunswick_t_max_address = "11 Heller St"
+
+### Part (e)
+
+<!-- Write your code for Q1 (e) in the code chunk below: -->
+
+
+```{r Q1e}
+#An if function is created to make sure there are 7 columns as it is in raw data, so that the code does not overwrite the correct values.
+if (ncol(house_data) == 7) 
+  {
+    house_data$FullyObserved <- rowSums(!is.na(house_data)) == 7 
+  }
+
+#ColSums is used to find total number of NA cells.
+col_miss <- names(house_data)[which.max(colSums(is.na(house_data)))]
+
+
+```
+
+<!-- Report your answer for Q1 (e) below: -->
+#col_miss = "YearBuilt"
+
+
+### Part (f)
+
+
+<!-- Write your code for Q1 (f) in the code chunk below: -->
+
+```{r Q1f}
+
+#Installing required packages ggplot2,
+#install.packages("ggplot2")
+library(ggplot2)
+
+#Creating a variable named wb(short for workbench) to store my subset of data,
+wb <- house_data[house_data$Suburb %in% c("Bentleigh East", "Preston", "Reservoir"),]
+
+#The graph is created using ggplot as,
+ggplot(wb, aes(x = Suburb, y = Price)) +
+  geom_boxplot() +
+  labs(title = "Price Over Suburb", 
+       x = "Suburbs", 
+       y = "Price") +
+  theme(plot.title = element_text(hjust = 0.5)) #Title is centered
+#Temporarily created variable is cleared to keep the environment clear.
+rm (wb)
+
+```
+
+
+### Part (g)
+
+
+<!-- Write your code for Q1 (g) in the code chunk below: -->
+
+```{r Q1g}
+#Creating variables named wb1,2(short for workbench) to store my subset of data,
+wb1 <- house_data[house_data$Rooms == 1, ] #Properties with 1 bedroom
+wb2 <- house_data[house_data$Rooms == 4, ] #Properties with 4 bedroom
+
+# 1st histogram with 1 bedroom
+hist(wb1$BuildingArea, 
+     xlim = c(0, 300),                        #x axis limits from 0 to 300
+     prob = TRUE,                             #Probability scale
+     col = rgb(1, 0, 0, 1), 
+     main = "Building Areas with Probability Scale", 
+     xlab = "Area", 
+     ylab = "Density (Pr.)")
+
+# 2nd histogram with 4 bedrooms
+hist(wb2$BuildingArea, 
+     xlim = c(0, 300), 
+     prob = TRUE,
+     col = rgb(1, 0, 1, 0.5),
+     add = TRUE)                              #Add command is used to combine both histograms
+
+legend("right", 
+       legend = c("1 Bedroom", "4 Bedrooms"), 
+       fill = c(rgb(1, 0, 0, 1), rgb(1, 0, 1, 0.5)))
+#Temporarily created variable is cleared to keep the environment clear.
+rm(wb1)
+rm(wb2)
+
+```
+
+### Part (h)
+
+<!-- Write your code for Q1 (h) in the code chunk below: -->
+
+
+```{r Q1h}
+#Step 1: Calculating averages for both cases,
+mean_by_category <- tapply(house_data$BuildingArea, house_data$Rooms, mean, na.rm = TRUE)
+global_mean <- mean(house_data$BuildingArea, na.rm = TRUE)
+
+
+#Step 2: Replace NA values using for & if loop
+for (i in 1:nrow(house_data)) #for each row of house_data dataset,
+{
+  if (is.na(house_data$BuildingArea[i])) #if building area`s i`th value is empty,
+  {
+    tmp <- house_data$Rooms[i] #hold relevant room value as tmp(shot for temporary),
+    if (!is.na(mean_by_category[as.character(tmp)])) #Checking if selected room's value in mean_by_category array has a numeric average value or empty(NA value),
+    {
+    house_data$BuildingArea[i] <- mean_by_category[as.character(tmp)] #fill relevant cell with its category mean
+    } else 
+      {
+      house_data$BuildingArea[i] <- global_mean  #fill the relevant cell with the global category
+      }
+  }
+}
+
+#Temporarily created variable is cleared to keep the environment clear.
+rm(tmp)
+rm(global_mean)
+rm(mean_by_category)
+rm(i)
+```
+
+## Question 2
+
+### Part (a)
+
+
+<!-- Write your function for Q2 (a) in the code chunk below: -->
+
+
+```{r Q2a}
+    #The classify_point Function is defined as,
+classify_point <- function(x,training_data,k,dist_func) 
+{
+
+    #n and P is defined
+  n <- ncol(training_data)     # # of Columns in trainingData
+  p <- nrow(training_data) - 1 # # of Rows -1; numerical values in trainingData. 
+  
+    #k is checked
+  if (k <= 0 || k %% 1 != 0) 
+  {
+    stop("inappropriate k value. K must be a positive integer, greater than n.")
+  }
+  
+    #Distance vector is defined to calculate and record distances in a vector
+  dist_vector <- numeric(n)
+  for (i in 1:n) 
+  {
+    dist_vector[i] <- dist_func(x, training_data[1:p, i]) #Considering that dist_function will only have 2 variables, one is unknown x and the second is the training data to calculate distances.
+  }
+  
+    # Combining the created dist_vector with relevant y values (as class).
+  dist_and_class <- data.frame(thedistance = dist_vector, class = as.numeric(training_data[p + 1,]), row.names = NULL)
+  
+    # Sorting ASC by distance to follow Equation 1,
+  neighbors_sorted <- dist_and_class[order(dist_and_class$thedistance), ]
+  
+    # Selecting the k-nearest neighbors
+  k_nearest <- head(neighbors_sorted, k)
+  
+  #If Statement,  
+    # Counting the total number of occurrences for y=1 and y=2 values to be used in the if statement,
+  num_of_class <- table(k_nearest$class)
+  
+    # Calculating and classifying X according to instructions,
+  if (length(num_of_class) == 1) {
+    # If all neighbors are the same class
+    predicted_class <- as.numeric(names(num_of_class))
+  } else if (k %% 2 == 0 && num_of_class[1] == num_of_class[2]) {
+    # If there's a tie, look at the (k + 1)-th nearest neighbor
+    predicted_class <- neighbors_sorted$class[k + 1]
+  } else {
+    # Otherwise, choose the majority class
+    predicted_class <- as.numeric(names(which.max(num_of_class)))
+  }
+  
+  
+return(predicted_class)
+}
+
+```
+
+
+### Part (b)
+
+
+<!-- Write your function for Q2 (b) in the code chunk below: -->
+
+
+```{r Q2b}
+    #The function,
+classify_data <- function(test_data,training_data,k,dist_func) 
+  {
+      #defining m and p1
+    p <- nrow(test_data)            # # of rows without y(class) value; just pure observations.
+    m <- ncol(test_data)            # # of Columns.
+    n <- ncol(training_data)   # # of Columns.
+
+    #k is checked
+  if (k <= 0 || k %% 1 != 0) 
+  {
+    stop("inappropriate k value.. K must be a positive integer.")
+  }
+    
+    predicted_classes <- numeric(m)
+      # Creating a loop for each observation in test_data to classify them using the prediction
+    for (i in 1:m) #for the length of m
+    {
+      predicted_classes[i] <- classify_point(test_data[,i, drop = FALSE],training_data[,i, drop = FALSE],k,dist_func)
+    }
+    
+    return(predicted_classes)
+}
+```
+
+### Part (c)
+
+
+<!-- Write your code for Q2 (c) in the code chunk below: -->
+
+
+```{r Q2c}
+  #setting the directory
+setwd("C:/Users/Engin-Eer/OneDrive - University of Southampton/Semester 1/MATH6166 - Statistical Computing for Data Scientists (R)/Coursework Assignment/")
+  #imports
+ion_train <- read.table("ion_train.txt")
+ion_test <- read.table("ion_test.txt")
+
+  #euclidean distance
+euclidean_distance <- function(a, b) 
+{
+  sqrt(sum((a - b)^2))
+}
+
+m <- ncol(ion_test)  # Number of observations in test table
+
+#An empty df is defined to avoid errors
+predicted_classes <- data.frame(matrix(nrow = m, ncol = 13))
+
+for (k in 1:13) #for each k value,
+{
+  predicted_classes[,k] <- classify_data(ion_test, ion_train, k, euclidean_distance)
+}
+rm(m,k)
+```
+
+### Part (d)
+
+
+<!-- Write your function for Q2 (d) in the code chunk below: -->
+
+
+```{r Q2d}
+
+calc_conf_mat <- function(predicted_classes, true_classes) 
+{
+    #An empty 2x2 matrix is created as,
+  conf_mat <- matrix(0, nrow = 2, ncol = 2)
+  
+    #Defining Row&Column names as,
+  rownames(conf_mat) <- c("ActualClass:1", "ActualClass:2")
+  colnames(conf_mat) <- c("PredictedClass1", "PredictedClass2")
+  
+    #Calculations
+  conf_mat[1, 1] <- sum(true_classes == 1 & predicted_classes == 1) # Correct predictions for class 1
+  conf_mat[1, 2] <- sum(true_classes == 1 & predicted_classes == 2) # False Negatives for class 2
+  conf_mat[2, 1] <- sum(true_classes == 2 & predicted_classes == 1) # False Positives for class 2
+  conf_mat[2, 2] <- sum(true_classes == 2 & predicted_classes == 2) # Correct predictions for class 2
+  
+  return(conf_mat)
+}
+
+```
+
+
+### Part (e)
+
+
+<!-- Write your code for Q2 (e) in the code chunk below: -->
+
+
+```{r Q2e}
+#Defining True classes
+true_classes <- c(rep(1, 15), rep(2, 15))
+#Calculating the 2x2 confusion matrix,
+tt <- calc_conf_mat(predicted_classes,true_classes)
+
+#Proportion of incorrect classifications = (False Negatives+False Positives) / Total # of Observations
+wrong_proportions <- (tt[1, 2] + tt[2, 1]) / (tt[1, 1]+tt[1, 2]+tt[2, 1]+tt[2, 2]) * 100
+
+cat("Wrong Proportion is: ", sprintf("%.2f%%", wrong_proportions))
+rm(tt)
+```
+
+
+
+### Part (f)
+
+
+<!-- Write your code for Q2 (f) in the code chunk below: -->
+
+
+```{r Q2f}
+  #Defining distance functions
+  #f1
+f1 <- function(a, b) 
+{
+  sum(abs(a - b))
+}
+  #f2
+f2 <- function(a, b) 
+{
+  max(abs(a - b))
+}
+
+  #f3
+f3 <- function(a, b) 
+{
+1 - (sum(a * b) / sqrt(sum(a^2)) * sqrt(sum(b^2)))
+}
+  
+  #Defining True classes one more time
+true_classes <- c(rep(1, 15), rep(2, 15))
+  #A list to store wrong proportions is defined
+wrong_proportions_list <- c()
+
+  #Calculations for each given distance function,
+  predicted_classes <- classify_data(ion_test, ion_train, 13, f3)
+  tt3 <- calc_conf_mat(predicted_classes,true_classes)
+  wrong_proportions3 <- (tt3[1, 2] + tt3[2, 1]) / (tt3[1, 1]+tt3[1, 2]+tt3[2, 1]+tt3[2, 2]) * 100
+  
+  predicted_classes <- classify_data(ion_test, ion_train, 13, f2)
+  tt2 <- calc_conf_mat(predicted_classes,true_classes)
+  wrong_proportions2 <- (tt2[1, 2] + tt2[2, 1]) / (tt2[1, 1]+tt2[1, 2]+tt2[2, 1]+tt2[2, 2]) * 100
+  
+  predicted_classes <- classify_data(ion_test, ion_train, 13, f1)
+  tt1 <- calc_conf_mat(predicted_classes,true_classes)
+  wrong_proportions1 <- (tt1[1, 2] + tt1[2, 1]) / (tt1[1, 1]+tt1[1, 2]+tt1[2, 1]+tt1[2, 2]) * 100
+
+  
+
+    wrong_proportions_list <- c(wrong_proportions1,wrong_proportions2,wrong_proportions1)
+  
+  
+  #Finding the best result
+#I am assuming that the right way to check if results are correct is to check it with the given information on part Q2E.
+    #Defining True classes
+best_func <- c("f1", "f2", "f3")[which.min(wrong_proportions_list)]
+rm(wrong_proportions3,wrong_proportions2,wrong_proportions1,wrong_proportions_list,tt1,tt2,tt3)
+```
+
+<!-- Report your answer for Q2 (f) in the code chunk below: -->
+#best_func = "f1"
+
+
+### Part (g)
+
+
+<!-- Write your code for Q2 (g) in the code chunk below: -->
+
+
+```{r Q2g}
+  #Calculating predicted classes using the distance function with most accuracy,
+if (best_func == "f1") 
+  {
+    predicted_classes <- classify_data(ion_test, ion_train, 13, f1)
+  } else if (best_func == "f2") 
+  {
+    predicted_classes <- classify_data(ion_test, ion_train, 13, f2) 
+  } else if (best_func == "f3") 
+    {
+      predicted_classes <- classify_data(ion_test, ion_train, 13, f3)   
+    }
+  #Combining ion_test with predicted classes numeric
+myplotdata <- rbind(ion_test,predicted_classes,true_classes)
+
+  #Re-defining true classes
+true_classes <- c(rep(1, 15), rep(2, 15))
+#The visualization part
+library(ggplot2)
+
+plot(jitter(myplotdata[1:34, 6]), jitter(myplotdata[1:34, 7]),
+     col = ifelse(true_classes == 1, "green", "red"), # true classes are to set green color
+     pch = ifelse(predicted_classes == true_classes, 16, 4), # cross (x) is assigned for wrong predictions
+     xlab = "6th Dimension", ylab = "7th Dimension", #Axis Titles
+     main = "Scatter Plot of Dimensions 6 and 7 for the Test Dataset")
+legend("topleft", legend = "wrong predictions", pch = 4)
+
+
+```
+
+
+### Part (h)
+
+
+<!-- Write your function for Q2 (h) in the code chunk below: -->
+
+
+```{r Q2h}
+    #The function,
+classify_data2 <- function(test_data,training_data,k,dist_func) 
+  {
+    # Req1: Last row of training_data condition
+  if (!all(training_data[nrow(training_data), ] %in% c(1, 2))) { #if all last row values are not in c(1,2)
+    stop("Last row of training_data should only contain numeric values equal to 1 or 2.")
+  }
+  
+    # Req2: The matching dimensions for test_data and training_data
+  if (ncol(test_data) != ncol(training_data) || nrow(test_data) != nrow(training_data) - 1) {
+    stop("Dimensions of test_data and training_data do not agree.")
+  }
+  
+    # Req3: Ensuring the dist_func is an actual function
+  if (!is.function(dist_func)) {
+    stop("Argument dist_func should be a function object.")
+  }
+    
+
+        #defining m and p1
+      p <- nrow(test_data)            # # of rows without y(class) value; just pure observations.
+      m <- ncol(test_data)            # # of Columns.
+      n <- ncol(training_data)   # # of Columns.
+  
+      #k is checked
+    if (k <= 0 || k %% 1 != 0) 
+    {
+      stop("inappropriate k value.. K must be a positive integer.")
+    }
+      
+      predicted_classes <- numeric(m)
+        # Creating a loop for each observation in test_data to classify them using the prediction
+      for (i in 1:m) #for the length of m
+      {
+        predicted_classes[i] <- classify_point(test_data[,i, drop = FALSE],training_data[,i, drop = FALSE],k,dist_func)
+      }
+      
+      return(predicted_classes)
+  }
+
+```
+
+
+
+## Question 3
+
+
+### Part (a)
+
+
+<!-- Write your code for Q3 (a) in the code chunk below: -->
+
+
+```{r Q3a}
+set.seed(2024) # Do not delete this line of code. Write your answer after this line.
+
+#x is defined as first 150 values have mean of 0 and variance of 0.8 with normal distribution, with change happening at 150, and last 350 values have mean of 2 and variance of 0.8 with normal distribution.
+x <- c(rnorm(150,0,sqrt(0.8)),rnorm(350,2,sqrt(0.8)))
+
+#mean value calculations for plot
+mean1 <- sum(x[1:150])/150
+mean2 <- sum(x[151:500])/350
+meanplot <- c(rep(mean1,150),rep(mean2,350))
+
+#the plot
+library(ggplot2)
+plot(x, type = "l",   xlab = "Time (t)", ylab = "Xt", main = "Simulated Data with Average Trendline", font.main = 2)
+abline(v = 150, col = "green", lwd = 2, lty = 2)
+lines(meanplot, col = "red", lwd = 2)
+legend("topright", legend = c("Average Line", "Change Point"),col = c("red", "green"), lwd = 2, lty = c(1, 2))
+
+rm(mean1,mean2,meanplot)
+```
+
+
+### Part (b)
+
+
+<!-- Write your function for Q3 (b) in the code chunk below: -->
+
+
+```{r Q3b}
+CUSUM.calc <- function (x) 
+  {
+  #n is defined to make formulas less complex.
+  n=length(x)
+  #defining an empty numeric.
+  x.CUSUM <- numeric(n-1)
+  # cumulative sum to reduce workload
+  S <- cumsum(x)
+  #the for loop to feed x.CUSUM function.
+  for (k in 1:(n-1)) #for each k between 1 to n-1,
+    {
+    x.CUSUM[k] <- abs(sqrt((k*(n-k))/n)  *  (S[k]/k - (S[n] - S[k]) / (n - k))) #calculation according to eq(5).
+    }
+  
+  
+    
+  return(x.CUSUM)
+}
+```
+
+### Part (c)
+
+
+<!-- Write your function for Q3 (c) in the code chunk below: -->
+
+
+```{r Q3c}
+noise.est <- function(x) 
+{
+    #defining an empty numeric named capitalized "MAD".
+  MAD <- numeric(length(x)-1)
+  
+    #Yt = (Xt+1 − Xt)/√2 calculation
+  for (i in 1:(length(x)-1)) 
+  {
+  MAD[i] <- (x[i+1]-x[i])/sqrt(2)
+  }
+    #median calculation of Yt values
+  MAD_median <- median(MAD)
+ 
+  for (j in 1:(length(x)-1)) 
+  {
+  MAD[j] <- abs(MAD[j]-MAD_median)
+  }
+  
+  sigma.est <- 1.48 * median(MAD)
+
+return(sigma.est)
+}
+```
+
+### Part (d)
+
+
+<!-- Write your function for Q3 (d) in the code chunk below: -->
+
+
+```{r Q3d}
+
+  #cpt.detect function begins here
+cpt.detect <- function(x,threshold)
+{
+  #default threshold is defined
+  threshold <- sqrt(2*log(length(x)))
+  
+  #Use of functions written in B&C
+  calculationX <- CUSUM.calc(x)
+  noiseX <- noise.est(x)
+  
+  #Calculation of Equation 7 as cpt
+  cpt <- which.max(calculationX)
+  #Calculation of Equation 8 as is.cpt
+  is.cpt <- calculationX[cpt]/noiseX > threshold
+  
+  x.cpt <- list(calculationX,noiseX,cpt,is.cpt)
+return(x.cpt) 
+}
+
+```
+
+### Part (e)
+
+
+<!-- Write your code for Q3 (e) in the code chunk below: -->
+
+
+```{r Q3e, eval = TRUE}
+# if this code is running slowly and you want to render the file quickly to 
+# check the code in other questions, you can temporarily set eval = FALSE in
+# the chunk option above. Just remember to change it to eval = TRUE before
+# you submit the file!
+
+    #defining n limits
+  nlimits <- c(100,500,1000,2000,4000)
+    #defining an empty numeric to hold averages
+  ave_run_times <- numeric(length(nlimits))
+  systime<- numeric(100)
+    #combining for and while loop to iterate 500 times
+  for(i in 1:length(nlimits))
+  {
+    timer <- 1
+      while (timer <= 100) 
+      {
+        ##code here
+          mydata <- rnorm(nlimits[i],0,1)
+          systime[timer] <- system.time(cpt.detect(mydata,threshold))[["elapsed"]]
+        #code here
+        timer = timer + 1
+      }
+    ave_run_times[i] <- mean(systime)
+  }
+
+  #the plot
+plot(nlimits, ave_run_times, type = "b", xlab = "n", ylab = "Averages",
+  main = "Average Run Time over N", pch = 16, col = "purple",axes=FALSE) +
+  axis(1, at = c(100, 500, 1000, 2000, 4000)) +
+  axis(2)
+
+rm(timer,systime,nlimits,i,ave_run_times,mydata)
+```
+
+### Part (f) 
+
+
+<!-- Write your function for Q3 (f) in the code chunk below: -->
+
+
+```{r Q3f}
+
+  #default value assignment
+reps <- 199
+sig.lvl <- 0.05
+  #the function begins here  
+perm.test <- function(x,x.CUSUM.max,sigma.est,reps,sig.lvl) 
+{
+
+    # Initialize an empty vector for Ar
+  permutated_Ar <- numeric(reps)
+  
+    #for loop to iterate on R(reps),
+  for (u in 1:reps) 
+    {
+      permutated_Xn           <- sample(x,length(x))                                #new values are generated for each u,
+      permutated_Tk           <- CUSUM.calc(permutated_Xn)                          #CUSUM statistic value calculated,
+      x.CUSUM.max             <- max(permutated_Tk)                                 #max value has found,
+      sigma.est               <- noise.est(permutated_Xn)                           #noise is calculated
+      permutated_Ar[u]        <- x.CUSUM.max/sigma.est                              #Ar is calculated for the random sample,
+    }
+      perm.c                  <- quantile(permutated_Ar,probs = 1 - sig.lvl)        #c is calculated
+      p.val                   <- sum(permutated_Ar >= (x.CUSUM.max/sigma.est))/reps #p is calculated
+      
+      
+    #return value is defined as a list
+  x.perm <- list(perm.c,p.val)
+return(x.perm)
+}
+```
+
+
+### Part (g)
+
+
+<!-- Write your function for Q3 (g) in the code chunk below: -->
+
+
+```{r Q3g}
+    #default values are assigned out of the function as,
+  reps <- 199
+  sig.lvl <- 0.05
+
+  #New cpt.detect2 function begins here
+cpt.detect2 <- function(x,threshold,threshold.type,reps=199,sig.lvl=0.05)
+{
+  calculationX <- CUSUM.calc(x)
+  noiseX <- noise.est(x)
+  x.CUSUM.max <- max(calculationX)  # CUSUM max for the input data
+  sigma.est <- noiseX               # Noise estimate for the input data
+  
+  #default threshold is defined
+  if (threshold.type == "manual") 
+  {
+      threshold <- sqrt(2*log(length(x)))
+      p.val <- NA
+  } else if (threshold.type == "perm") 
+    {
+      temp <- perm.test(x, x.CUSUM.max, sigma.est, reps, sig.lvl) 
+      threshold <- temp[[1]]  # First element is the threshold
+      p.val <- temp[[2]]      # Second element is the p-value
+    }   
+  
+  #Calculation of Equation 7 as cpt
+  cpt <- which.max(calculationX)
+  #Calculation of Equation 8 as is.cpt
+  is.cpt <- calculationX[cpt]/noiseX > threshold
+  
+  
+    #New conditions defining x.cpt
+  if (threshold.type == "perm")
+    {
+      x.cpt <- list(calculationX,noiseX,cpt,is.cpt,threshold.type,threshold,p.val)
+    } else 
+    {
+      x.cpt <- list(calculationX,noiseX,cpt,is.cpt,threshold.type,threshold)
+    }
+return(x.cpt) 
+}
+
+```
+
+### Part (h)
+
+
+<!-- Write your code for Q3(h) in the code chunk below: -->
+
+
+```{r Q3h, fig.height = 8.5, fig.width = 8}
+  #setting the directory
+setwd("C:/Users/Engin-Eer/OneDrive - University of Southampton/Semester 1/MATH6166 - Statistical Computing for Data Scientists (R)/Coursework Assignment/")
+  #importing data
+nile.data <- read.table("nile_volume.txt",header=TRUE)
+
+    #function is called
+nile.cpt <- cpt.detect2(nile.data$volume,threshold,threshold.type="perm",reps=499,sig.lvl=0.01)
+        ###nile.cpt elements are; list(calculationX,noiseX,cpt,is.cpt,threshold.type,threshold,p.val)
+  #defining threshold
+threshold <- nile.cpt[[6]]
+
+    #Calculations for the Plot
+  #calculating means first
+mean_before <- sum(nile.data$volume[1:nile.cpt[[3]]])/nile.cpt[[3]]
+mean_after <- sum(nile.data$volume[(nile.cpt[[3]] + 1):nrow(nile.data)])/(nrow(nile.data) - nile.cpt[[3]])
+mean_combined <- c(rep(mean_before, nile.cpt[[3]]), rep(mean_after, nrow(nile.data) - nile.cpt[[3]]))
+  #cusum stat. second
+CUSUM_statistics <- CUSUM.calc(nile.data$volume) / nile.cpt[[2]] # nile.cpt[[2]] is noise estimate
+
+
+  #The Plot
+par(mfrow = c(2, 1))
+plot(nile.data$year, nile.data$volume, type = "l", main = "Nile Data Over Years", 
+     xlab = "Year", ylab = "Volume")
+lines(nile.data$year, mean_combined, col = "purple", lwd = 2)  # Estimated mean function
+abline(v = nile.data$year[nile.cpt[[3]]], col = "blue", lty = 2, lwd = 2)  # Vertical line at change point
+legend("topright", legend = c("Change Point","Est. Mean"),
+       col = c("blue","purple"), lty = 2, lwd = 2, bty = "n")
+
+  #Plot below
+plot(CUSUM_statistics, type = "l", main = "Standardized CUSUM Statistic", ylab = "CUSUM Statistics", xlab = "n(Year) Between 1871-1970")
+abline(v = nile.cpt[[3]], col = "red", lty = 2, lwd = 2)  # Vertical line at change point
+abline(h = sqrt(2 * log(length(CUSUM_statistics))), col = "green", lty = 2) # Horizontal line at sqrt(2 * log(n))
+abline(h = threshold, col = "orange", lty = 2)   # Horizontal line at threshold from nile.cpt
+legend("topright", legend = c("change point","sqrt(2 * log(n))", "Threshold from cpt"),
+       col = c("red","green", "orange"), lty = 2, lwd = 2, bty = "n")
+
+```
+
