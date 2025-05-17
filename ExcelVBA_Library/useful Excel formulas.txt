@@ -1,0 +1,5 @@
+##Son Kelimeyi Alır (Boşluğa odaklı,A2'ye hedefli formül)
+=TRIM(RIGHT(SUBSTITUTE(A2;" ";REPT(" ";LEN(A2)));LEN(A2)))
+
+XX.csv (courtfile eşleme dosyası)nda sorgu yapıyor. I2'ye hedefli.
+=IFERROR(VLOOKUP(I2;xx.csv!$A:$G;7;FALSE);IFERROR(VLOOKUP(I2;xx.csv!$B:$G;6;FALSE);IFERROR(VLOOKUP(I2;xx.csv!$C:$G;5;FALSE);IFERROR(VLOOKUP(I2;xx.csv!$D:$G;4;FALSE);IFERROR(VLOOKUP(I2;xx.csv!$E:$G;3;FALSE);IFERROR(VLOOKUP(I2;xx.csv!$F:$G;2;FALSE);"#N/A"))))))

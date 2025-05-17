@@ -1,0 +1,70 @@
+//veritabanındaki dd:mm:yyyy hh:mm:ss formatından tarih çekme
+EXTRACT(DATE FROM [tableName].colName)
+veya format update'i için; CONVERT(date, colName)
+
+//YılAy Sıralaması için DATEMONTH Formatı (collectionDate'e targetlı);
+CONCAT(CONVERT(VARCHAR, YEAR(collectionDate)),IIF(LEN(CONVERT(VARCHAR, MONTH(collectionDate))) = 1,CONCAT('0',CONVERT(VARCHAR, MONTH(collectionDate))),CONVERT(VARCHAR, MONTH(collectionDate)))) AS datemonth
+FORMAT(CollectionDate, 'yyyy-MM') as Dönem
+
+//Tarih Çıkartma
+datediff(month,eskiDate,yeniDate)
+
+//before executing a query;
+queryXX = "Select * from X"
+sonrasında alt satırına
+show_time_to_run(queryXX)
+veya
+show_amount_of_data_scanned(queryXX)
+yazılarak query result duration hesaplanabilir
+
+//CONCAT text merge
+//CAST FORMAT CHANGER
+
+//ISNULL(col1,col2) col1 sütununda null varsa orayı col2 ile doldurur.
+Excel'deki =If(A1='',B1,A1) ile update etme işindeki gibi.
+
+//SUBSTRING(Col1, 1, CHARINDEX(',', Col1)-1) as XX
+Exceldeki mid(find()) fonksiyonu işini görür.
+
+//SUBSTRING(col1, CHARINDEX(',',col1)+2,99)
+
+//PARSENAME(col1,1)
+Mesela col1'de 'abc.de.f' diye dot-seperated bi veri olsun. Bunu text to column yapmak için
+PARSENAME(col1,3) bana 'abc' yi döndürür.
+PARSENAME(col1,2) bana 'de' yi döndürür.
+PARSENAME(col1,1) bana 'f' yi döndürür.
+
+//REPLACE(COL1,'XX','YY') col1'de xx'i yy'ye dönüştürür
+
+//@@ BAŞ - Gün, AY YIL BIRLEŞTİREREK 'YYYY-MM-DD' formatına getirme  SQLi@@//
+
+CASE
+        WHEN @AY@ IS NOT NULL 
+            AND @GUN@ IS NOT NULL 
+            AND @YIL@ IS NOT NULL 
+        THEN 
+            concat@YIL@ 
+            CASE
+                WHEN len@AY@ =1   
+                THEN Concat('0',Convert(nvarchar(2),@AY@ 
+                ELSE Convert(nvarchar(2),@AY@ 
+            END,'-',
+            CASE
+                WHEN len@GUN@ =1   
+                THEN Concat('0',Convert(nvarchar(2),@GUN@ 
+                ELSE Convert(nvarchar(2),@GUN@ 
+            END)
+        ELSE NULL
+    END AS 'BirlesmisColumn (yyyy-mm-dd)'
+
+//@@ SON - Gün, AY YIL BIRLEŞTİREREK 'YYYY-MM-DD' formatına getirme  SQLi@@//
+
+//Bir sütuna göre verileri 1,2,3 diye gruplama. Örneğin "x,x,y,z,z,q, x" 'i "1,1,2,3,3,4,x" olarak gruplar.
+DENSE_RANK() OVER (ORDER BY Sütunİsmi)
+
+//takım lideri ekleme
+      --,kk.AdSoyad as Agent
+      --,(select AdSoyad from [dbo].[Kullanici] ks where  ks.Id=kk.TakimLideriId) as TakımLideri
+
+//dataname ile gün filtresi koyma
+datename(dw,st.[StartDate]) not in ('Saturday','Sunday') 

@@ -1,0 +1,37 @@
+Sub CombineExcelFiles()
+    Dim MasterWorkbook As Workbook
+    Dim SourceWorkbook As Workbook
+    Dim SourceWorksheet As Worksheet
+    Dim LastRow As Long
+    Dim MasterLastRow As Long
+    Dim counter As Integer
+    counter = 0
+    ' Set the master workbook
+    Set MasterWorkbook = ThisWorkbook
+    
+    ' Loop through each file in the folder
+    Dim File As Variant
+    For Each File In Application.GetOpenFilename(FileFilter:="Excel Files (*.xls*), *.xls*", Title:="Select Files to Merge", MultiSelect:=True)
+        ' Open the source workbook
+        Set SourceWorkbook = Workbooks.Open(File)
+        
+        ' Set the source worksheet
+        Set SourceWorksheet = SourceWorkbook.Worksheets(1)
+        
+        ' Find the last row in the source worksheet
+        LastRow = SourceWorksheet.Cells(Rows.Count, 1).End(xlUp).Row
+        
+        ' Find the last row in the master workbook
+        MasterLastRow = MasterWorkbook.Worksheets(1).Cells(Rows.Count, 1).End(xlUp).Row
+        
+        ' Copy the data from the source worksheet to the master workbook
+        If counter = 0 Then
+        SourceWorksheet.Range("A1:J" & LastRow).Copy Destination:=MasterWorkbook.Worksheets(1).Range("A" & MasterLastRow)
+        counter = counter + 1
+        Else
+        SourceWorksheet.Range("A2:J" & LastRow).Copy Destination:=MasterWorkbook.Worksheets(1).Range("A" & MasterLastRow + 1)
+        End If
+        ' Close the source workbook
+        SourceWorkbook.Close SaveChanges:=False
+    Next File
+End Sub

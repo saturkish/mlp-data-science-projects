@@ -1,0 +1,74 @@
+Private Sub CommandButton1_Click()
+    'bymmb.com
+    
+    listesonu = Cells(Rows.Count, "A").End(xlUp).Row
+    sonsutun = ActiveSheet.UsedRange.SpecialCells(xlLastCell).Column
+    sonsutunismi = Split(Cells(1, sonsutun).Address, "$")(1)
+    alansonu = sonsutunismi & sonsutun
+    
+    listem = Range("A1" & ":" & alansonu)
+    
+    kritersec = Application.InputBox("Hangi sütuna göre bölünecek ise o sütunun sýra sayýsýný girin? ", "Parçala/Böl/Yönet", Type:=1)
+    Kriter = Cells(1, kritersec).Value
+    hangikolon = Split(Cells(1, kritersec).Address, "$")(1)
+    If kritersec = 0 Then Exit Sub
+    
+    
+        With Application.FileDialog(msoFileDialogFolderPicker)
+        .AllowMultiSelect = False
+        .Show
+         
+        If .SelectedItems.Count > 0 Then
+            uzanti = .SelectedItems(1)
+        End If
+         
+        End With
+    
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    
+           
+    Columns(hangikolon & ":" & hangikolon).Select
+    Selection.Copy
+    Columns("XFD:XFD").Select
+    ActiveSheet.Paste
+    Application.CutCopyMode = False
+    ActiveSheet.Range("$XFD$1:$XFD$100000").RemoveDuplicates Columns:=1, Header:=xlYes
+    Cells(1, 1).Select
+        
+        
+    sonkriter = Cells(Rows.Count, "XFD").End(xlUp).Row
+    For i = 2 To sonkriter
+    dosyaadi = Cells(i, 16384)
+        
+        
+    Selection.AutoFilter
+    ActiveSheet.Range("A1:" & sonsutunismi & 1).AutoFilter Field:=kritersec, Criteria1:=dosyaadi
+    Range(Selection, Selection.End(xlToRight)).Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Selection.Copy
+    Range("A1").Select
+        
+        
+    Workbooks.Add
+    ActiveSheet.Paste
+    ActiveSheet.Columns("A:XFD").EntireColumn.AutoFit
+    ActiveSheet.Cells(1, 1).Select
+    ActiveWorkbook.SaveAs Filename:=uzanti & dosyaadi & ".xlsx", _
+    FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
+    ActiveWindow.Close
+        
+    If ActiveSheet.AutoFilterMode = "True" Then
+    ActiveSheet.AutoFilterMode = "False"
+    End If
+    
+        
+    Next i
+    
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts = True
+    Range("XFD1:XFD100000").Clear
+    
+OutPut = MsgBox("Ýþlem Tamamlandý", vbOKOnly, "BY GORKEM DUZGUN")
+ 
+End Sub
