@@ -1,0 +1,84 @@
+model "Minimizing Group Splits for the Wedding Problem by Applying Split Penalties"
+uses "mmxprs"
+
+declarations
+    G = 1..7                      !Set of groups
+    T = 1..6                      !Set of tables
+    S: array(G) of integer        !Size of each group
+    P: array(G) of integer        !Penalty for splitting each group
+    C: array(T) of integer        !Capacity of each table
+    x: array(G, T) of mpvar       !Number of group members assigned to table
+    delta: array(G, T) of mpvar   !Binary variable. 1 if group g has guests table t
+    z: array(G) of mpvar          !Binary variable. 1 if group g is split across tables
+    objective: linctr
+end-declarations
+
+S :: [3, 4, 2, 5, 6, 4, 5]          !Group sizes are declared.
+P :: [10, 10, 10, 100, 10, 10, 10]   !Split penalties are assigned for groups to prioritize splits.
+C :: [6, 6, 6, 6, 4, 2]             !Table Capacity, single value integer.
+
+!!Define Binary Variables
+forall(g in G, t in T) do
+    x(g, t) is_integer
+    delta(g, t) is_binary
+end-do
+forall(g in G) do
+    z(g) is_binary
+end-do
+
+!The objective is to minimize split penalties.
+objective := sum(g in G) P(g) * z(g)
+minimize(objective)
+
+forall(g in G) do
+    sum(t in T) x(g, t) = S(g)              !Constraint 1: For each group, Total # of guests assigned should be equal to Group Sizes.
+    sum(t in T) delta(g, t) <= 2            !Constraint 2: A group cannot be split across more than 2 tables.
+end-do
+
+!Combining assignments to the binary variables.
+forall(g in G, t in T) do
+    x(g, t) <= delta(g, t) * S(g)
+    delta(g, t) >= x(g, t) / S(g)
+end-do
+
+!Group Splitting Definition
+forall(g in G) do
+    z(g) = sum(t in T) delta(g, t) - 1
+end-do
+
+!Table Capacity Constraint
+forall(t in T) do
+    sum(g in G) x(g, t) <= C(t)
+end-do
+
+!New Constraint: Prevent Splitting Single Individuals
+forall(g in G, t in T) do
+    if S(g) > 2 then
+        x(g, t) >= 2 * delta(g, t)
+    end-if
+end-do
+
+minimize(objective)
+
+!!Output
+writeln("Objective Value (Total Penalty): ", getobjval)
+writeln("Group Divisions:")
+forall(g in G) do
+    writeln("Group ", g, " (Size: ", S(g), "):")
+    if getsol(z(g)) > 0.5 then
+        writeln("  Group is split across multiple tables.")
+    else
+        writeln("  Group is fully assigned to a single table.")
+    end-if
+    forall(t in T) do
+        if getsol(x(g, t)) > 0 then
+            writeln("  Assigned ", getsol(x(g, t)), " members to Table ", t)
+        end-if
+    end-do
+end-do
+writeln("Table-wise Capacity Check:")
+forall(t in T) do
+    writeln("Table ", t, " used capacity: ", sum(g in G) getsol(x(g, t)), " out of ", C(t))
+end-do
+
+end-model
